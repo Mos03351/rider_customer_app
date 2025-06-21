@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:geocoding/geocoding.dart'; // ตรวจสอบว่า import นี้ถูกต้อง
 
 class MapAddressSelectionPage extends StatefulWidget {
   final LatLng? initialLocation; // พิกัดเริ่มต้น (ถ้ามี)
@@ -51,7 +51,7 @@ class _MapAddressSelectionPageState extends State<MapAddressSelectionPage> {
             child: FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                // ตั้งค่า Center เป็นค่าเริ่มต้น หรือพิกัดของผู้ใช้หากมี
+                // 'center' ยังคงมีใน MapOptions ของ flutter_map v6.x.x
                 center: _selectedLocation ?? LatLng(13.7563, 100.5018), // Default: Bangkok
                 zoom: 13.0,
                 onTap: (TapPosition tapPosition, LatLng latLng) async {
@@ -62,6 +62,7 @@ class _MapAddressSelectionPageState extends State<MapAddressSelectionPage> {
                   await _getAddressFromLatLng(latLng);
                 },
               ),
+              // 'layers' ยังคงมีใน FlutterMap ของ flutter_map v6.x.x
               layers: [
                 TileLayerOptions(
                   urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -74,6 +75,7 @@ class _MapAddressSelectionPageState extends State<MapAddressSelectionPage> {
                         width: 50.0,
                         height: 50.0,
                         point: _selectedLocation!,
+                        // 'builder' ยังคงมีใน Marker ของ flutter_map v6.x.x
                         builder: (ctx) => const Icon(
                           Icons.location_on,
                           color: Colors.red,
@@ -131,6 +133,7 @@ class _MapAddressSelectionPageState extends State<MapAddressSelectionPage> {
   // ฟังก์ชัน Reverse Geocoding
   Future<void> _getAddressFromLatLng(LatLng latLng) async {
     try {
+      // placemarkFromCoordinates เป็น method ของ package geocoding
       List<Placemark> placemarks = await placemarkFromCoordinates(
         latLng.latitude,
         latLng.longitude,

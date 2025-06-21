@@ -92,7 +92,7 @@ class AuthService {
 
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/profile'), // GET request ไปยัง /api/auth/profile
+        Uri.parse('$_baseUrl/profile'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -100,10 +100,21 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
-        return {'success': true, 'data': json.decode(response.body)};
+        final Map<String, dynamic> responseData = json.decode(response.body)['data']; // เข้าถึง 'data' key
+        // ตรวจสอบและส่งค่า latitude, longitude, address_text กลับไป
+        return {
+          'success': true,
+          'data': {
+            'name': responseData['name'],
+            'email': responseData['email'],
+            'phone': responseData['phone'],
+            'address_text': responseData['address_text'], // <<< รับ
+            'latitude': responseData['latitude'],       // <<< รับ
+            'longitude': responseData['longitude'],      // <<< รับ
+          }
+        };
       } else if (response.statusCode == 401 || response.statusCode == 403) {
-        // Token หมดอายุหรือไม่ถูกต้อง
-        await logout(); // ล้างสถานะล็อกอิน
+        await logout();
         return {'success': false, 'message': 'Session หมดอายุ, กรุณาเข้าสู่ระบบใหม่', 'logout': true};
       } else {
         final errorData = json.decode(response.body);
@@ -112,10 +123,16 @@ class AuthService {
     } catch (e) {
       return {'success': false, 'message': 'เกิดข้อผิดพลาดในการเชื่อมต่อ: $e'};
     }
-  } 
-  // ฟังก์ชันสำหรับอัปเดตข้อมูลโปรไฟล์ผู้ใช้
+  }
+
+  // อัปเดตข้อมูลโปรไฟล์
   Future<Map<String, dynamic>> updateUserProfile(
-      String name, String email, String? phone, String? address) async {
+      String name,
+      String email,
+      String? phone,
+      String? addressText,  // <<< เปลี่ยนชื่อ
+      double? latitude,     // <<< เพิ่ม
+      double? longitude) async { // <<< เพิ่ม
     final prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('jwtToken');
 
@@ -124,8 +141,8 @@ class AuthService {
     }
 
     try {
-      final response = await http.put( // <<< ใช้ http.put หรือ http.post ตามที่คุณเลือกใน Backend
-        Uri.parse('$_baseUrl/profile'), // PUT/POST request ไปยัง /api/auth/profile
+      final response = await http.put( // หรือ http.post ตามที่คุณเลือกใน Backend
+        Uri.parse('$_baseUrl/profile'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -133,8 +150,10 @@ class AuthService {
         body: json.encode({
           'name': name,
           'email': email,
-          'phone': phone,   // ส่งเบอร์โทร
-          'address': address, // ส่งที่อยู่
+          'phone': phone,
+          'address_text': addressText, // <<< ส่ง
+          'latitude': latitude,       // <<< ส่ง
+          'longitude': longitude,      // <<< ส่ง
         }),
       );
 
@@ -143,8 +162,10 @@ class AuthService {
         // อัปเดตข้อมูลใน SharedPreferences ทันทีหลังจากอัปเดตสำเร็จ
         await prefs.setString('userName', name);
         await prefs.setString('userEmail', email);
-        await prefs.setString('userPhone', phone ?? ''); // บันทึกเบอร์โทร
-        await prefs.setString('userAddress', address ?? ''); // บันทึกที่อยู่
+        await prefs.setString('userPhone', phone ?? '');
+        await prefs.setString('userAddressText', addressText ?? ''); // <<< บันทึก
+        await prefs.setDouble('userLatitude', latitude ?? 0.0);    // <<< บันทึก (ใช้ 0.0 เป็น default ถ้า null)
+        await prefs.setDouble('userLongitude', longitude ?? 0.0);   // <<< บันทึก (ใช้ 0.0 เป็น default ถ้า null)
 
         return {'success': true, 'message': responseData['message'] ?? 'อัปเดตข้อมูลสำเร็จ'};
       } else if (response.statusCode == 401 || response.statusCode == 403) {
