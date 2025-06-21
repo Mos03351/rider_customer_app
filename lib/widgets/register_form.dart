@@ -1,35 +1,51 @@
-// lib/widgets/login_form.dart
+// lib/widgets/register_form.dart
 import 'package:flutter/material.dart';
 import 'package:rider_customer_app/services/auth_service.dart'; // Import AuthService
 
-class LoginForm extends StatefulWidget {
-  final VoidCallback onLoginSuccess; // Callback เมื่อ Login สำเร็จ
+class RegisterForm extends StatefulWidget {
+  final VoidCallback onRegisterSuccess; // Callback เมื่อ Register สำเร็จ
 
-  const LoginForm({Key? key, required this.onLoginSuccess}) : super(key: key);
+  const RegisterForm({Key? key, required this.onRegisterSuccess}) : super(key: key);
 
   @override
-  State<LoginForm> createState() => _LoginFormState();
+  State<RegisterForm> createState() => _RegisterFormState();
 }
 
-class _LoginFormState extends State<LoginForm> {
+class _RegisterFormState extends State<RegisterForm> {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   final AuthService _authService = AuthService(); // สร้าง Instance ของ AuthService
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleRegister() async {
+    if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('โปรดกรอกข้อมูลให้ครบถ้วน')),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    final result = await _authService.login(
+    final result = await _authService.register(
+      _nameController.text,
       _emailController.text,
       _passwordController.text,
     );
 
     if (mounted) {
       if (result['success']) {
-        widget.onLoginSuccess(); // เรียก Callback เมื่อ Login สำเร็จ
+        // ลงทะเบียนสำเร็จ อาจจะแสดงข้อความและให้ไปหน้า Login
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.green,
+          ),
+        );
+        widget.onRegisterSuccess(); // เรียก Callback เพื่อไปหน้า Login
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -46,6 +62,7 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -55,6 +72,23 @@ class _LoginFormState extends State<LoginForm> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        TextField(
+          controller: _nameController,
+          keyboardType: TextInputType.text,
+          decoration: InputDecoration(
+            labelText: 'ชื่อ-นามสกุล',
+            hintText: 'ชื่อของคุณ',
+            prefixIcon: const Icon(Icons.person),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.blue, width: 2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
         TextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
@@ -88,28 +122,13 @@ class _LoginFormState extends State<LoginForm> {
             ),
           ),
         ),
-        const SizedBox(height: 20),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('ไปหน้าลืมรหัสผ่าน (ยังไม่ได้ทำ)')),
-              );
-            },
-            child: const Text(
-              'ลืมรหัสผ่าน?',
-              style: TextStyle(color: Colors.blue),
-            ),
-          ),
-        ),
         const SizedBox(height: 30),
         _isLoading
             ? const CircularProgressIndicator()
             : SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _handleLogin, // เรียกใช้ _handleLogin
+                  onPressed: _handleRegister, // เรียกใช้ _handleRegister
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Colors.blue,
@@ -120,7 +139,7 @@ class _LoginFormState extends State<LoginForm> {
                     elevation: 5,
                   ),
                   child: const Text(
-                    'เข้าสู่ระบบ',
+                    'ลงทะเบียน',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -130,16 +149,16 @@ class _LoginFormState extends State<LoginForm> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'ยังไม่มีบัญชี?',
+              'มีบัญชีอยู่แล้ว?',
               style: TextStyle(fontSize: 16),
             ),
             TextButton(
               onPressed: () {
-                // <<< แก้ไขตรงนี้เพื่อนำทางไป RegisterPage
-                Navigator.pushNamed(context, '/register');
+                // กลับไปหน้า Login
+                Navigator.pop(context);
               },
               child: const Text(
-                'ลงทะเบียนตอนนี้',
+                'เข้าสู่ระบบ',
                 style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
               ),
             ),

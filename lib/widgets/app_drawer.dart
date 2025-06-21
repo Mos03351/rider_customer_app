@@ -1,17 +1,42 @@
 // lib/widgets/app_drawer.dart
 import 'package:flutter/material.dart';
-// import 'package:shared_preferences/shared_preferences.dart'; // ไม่จำเป็นต้อง import ที่นี่แล้ว
 import 'package:rider_customer_app/screens/login_page.dart';
-import 'package:rider_customer_app/services/auth_service.dart'; // <<< Import AuthService ที่นี่
+import 'package:rider_customer_app/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import นี้ถูกต้องแล้ว
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends StatefulWidget {
   const AppDrawer({Key? key}) : super(key: key);
 
-  Future<void> _logout(BuildContext context) async {
-    final AuthService authService = AuthService(); // สร้าง Instance
-    await authService.logout(); // เรียกใช้ logout จาก AuthService
+  @override
+  State<AppDrawer> createState() => _AppDrawerState();
+}
 
-    if (context.mounted) {
+class _AppDrawerState extends State<AppDrawer> {
+  String _userName = 'ผู้ใช้งาน'; // สถานะสำหรับชื่อผู้ใช้
+  String _userEmail = 'user@example.com'; // สถานะสำหรับอีเมลผู้ใช้
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData(); // โหลดข้อมูลผู้ใช้เมื่อ Widget ถูกสร้าง
+  }
+
+  // ฟังก์ชันสำหรับโหลดข้อมูลผู้ใช้จาก SharedPreferences
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('userName') ?? 'ผู้ใช้งาน';
+      _userEmail = prefs.getString('userEmail') ?? 'user@example.com';
+    });
+  }
+
+  // ฟังก์ชันสำหรับออกจากระบบ
+  Future<void> _logout() async { // ไม่ต้องรับ BuildContext ตรงๆ แล้ว เพราะเป็น StatefulWidget
+    final AuthService authService = AuthService();
+    await authService.logout();
+
+    // ตรวจสอบว่า Widget ยังคงอยู่ใน Widget Tree ก่อนใช้งาน Navigator
+    if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginPage()),
         (Route<dynamic> route) => false,
@@ -25,25 +50,22 @@ class AppDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.blue,
+          // ใช้ UserAccountsDrawerHeader เพื่อแสดงข้อมูลผู้ใช้
+          UserAccountsDrawerHeader(
+            accountName: Text(
+              _userName, // แสดงชื่อผู้ใช้จาก State
+              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 40, color: Colors.blue),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  'สวัสดี, ผู้ใช้งาน!',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
+            accountEmail: Text(
+              _userEmail, // แสดงอีเมลผู้ใช้จาก State
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+            ),
+            currentAccountPicture: const CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, size: 40, color: Colors.blue),
+            ),
+            decoration: const BoxDecoration(
+              color: Colors.blue,
             ),
           ),
           ListTile(
@@ -90,7 +112,7 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
-            onTap: () => _logout(context),
+            onTap: _logout, // เรียกใช้ _logout โดยตรง
           ),
         ],
       ),

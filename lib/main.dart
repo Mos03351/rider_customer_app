@@ -3,7 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:rider_customer_app/screens/auth_check_screen.dart';
 import 'package:rider_customer_app/screens/home_screen.dart';
-import 'package:rider_customer_app/screens/profile_screen.dart';
+import 'package:rider_customer_app/screens/login_page.dart'; // ตรวจสอบว่ามีการ import แล้ว
+import 'package:rider_customer_app/screens/register_page.dart'; // <<< เพิ่มการ import หน้าลงทะเบียน
+import 'package:rider_customer_app/screens/profile_screen.dart'; 
 import 'package:rider_customer_app/screens/history_screen.dart';
 import 'package:rider_customer_app/screens/scheduled_screen.dart';
 import 'package:rider_customer_app/screens/help_screen.dart';
@@ -30,12 +32,12 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const AuthCheckScreen(),
-      // <<< เพิ่มบรรทัดนี้เพื่อซ่อน Debug Banner
-      debugShowCheckedModeBanner: false, // <<<<<<<<<<<<<<<<
-      // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      debugShowCheckedModeBanner: false,
       routes: {
         '/home': (context) => const HomeScreen(),
-        '/profile': (context) => const ProfileScreen(),
+        '/login': (context) => const LoginPage(), // เพิ่ม login route ไว้ถ้าจะใช้
+        '/register': (context) => const RegisterPage(), // <<< เพิ่ม Register Page Route
+        '/profile': (context) => const ProfileScreen(), 
         '/history': (context) => const HistoryScreen(),
         '/scheduled': (context) => const ScheduledScreen(),
         '/help': (context) => const HelpScreen(),

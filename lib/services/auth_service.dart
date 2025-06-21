@@ -4,10 +4,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  // 💡 สำคัญ: เปลี่ยน IP address นี้ให้ตรงกับ IP ของ Backend ของคุณ
-  // ถ้าคุณรัน Emulator/Simulator บนเครื่องเดียวกับ Backend สามารถใช้ 10.0.2.2 สำหรับ Android Emulator
-  // หรือ localhost สำหรับ iOS Simulator/desktop
-  static const String _baseUrl = 'http://192.168.1.100:3000/api/auth'; 
+  static const String _baseUrl = 'http://localhost:3000/api/auth'; // อย่าลืมเปลี่ยน IP ให้ถูกต้อง
 
   // ฟังก์ชันสำหรับการเข้าสู่ระบบ
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -24,11 +21,15 @@ class AuthService {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         final String token = responseData['token'];
+        final Map<String, dynamic> userData = responseData['user']; // <<< ดึงข้อมูล User จาก Response
 
-        // บันทึกสถานะล็อกอินและ Token
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('jwtToken', token);
+        // *** บันทึกชื่อและอีเมลผู้ใช้ลง SharedPreferences ***
+        await prefs.setString('userName', userData['name'] ?? 'ผู้ใช้งาน');
+        await prefs.setString('userEmail', userData['email'] ?? 'user@example.com');
+
 
         return {'success': true, 'message': 'เข้าสู่ระบบสำเร็จ'};
       } else {
@@ -40,37 +41,58 @@ class AuthService {
     }
   }
 
+  // --- เพิ่มฟังก์ชันสำหรับการลงทะเบียนตรงนี้ ---
+  Future<Map<String, dynamic>> register(String name, String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/register'), // Endpoint สำหรับ Register
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'name': name,
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 201) { // 201 Created คือสถานะที่เหมาะสมสำหรับการลงทะเบียนสำเร็จ
+        return {'success': true, 'message': 'ลงทะเบียนสำเร็จ! โปรดเข้าสู่ระบบ'};
+      } else {
+        final errorData = json.decode(response.body);
+        return {'success': false, 'message': errorData['message'] ?? 'ลงทะเบียนไม่สำเร็จ'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'เกิดข้อผิดพลาดในการเชื่อมต่อ: $e'};
+    }
+  }
+  // --- สิ้นสุดการเพิ่มฟังก์ชัน register ---
+
   // ฟังก์ชันสำหรับการออกจากระบบ
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', false);
-    await prefs.remove('jwtToken'); // ลบ Token ออกจาก SharedPreferences
+    await prefs.remove('jwtToken');
   }
 
-  // ฟังก์ชันตรวจสอบสถานะการล็อกอิน (ใช้ใน AuthCheckScreen)
+  // ฟังก์ชันตรวจสอบสถานะการล็อกอิน
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final bool loggedIn = prefs.getBool('isLoggedIn') ?? false;
     final String? token = prefs.getString('jwtToken');
-
-    // อาจจะเพิ่ม logic ตรวจสอบความถูกต้องของ token (เช่น หมดอายุ) ที่นี่
-    // แต่สำหรับการเริ่มต้น แค่มี token และสถานะ loggedIn ก็เพียงพอ
     return loggedIn && token != null;
   }
 
   // ตัวอย่างการเรียก API ที่ต้องการ JWT Token
-  // คุณสามารถเพิ่ม method อื่นๆ สำหรับการเรียก API ที่ต้องมีการยืนยันตัวตนได้ที่นี่
   Future<Map<String, dynamic>> fetchUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('jwtToken');
 
     if (token == null) {
-      return {'success': false, 'message': 'ไม่พบ Token, กรุณาเข้าสู่ระบบใหม่'};
+      return {'success': false, 'message': 'ไม่พบ Token, กรุณาเข้าสู่ระบบใหม่', 'logout': true};
     }
 
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/profile'), // ต้องแน่ใจว่า Backend มี Endpoint /api/auth/profile
+        Uri.parse('$_baseUrl/profile'), // GET request ไปยัง /api/auth/profile
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -82,10 +104,55 @@ class AuthService {
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         // Token หมดอายุหรือไม่ถูกต้อง
         await logout(); // ล้างสถานะล็อกอิน
-        return {'success': false, 'message': 'Session หมดอายุ, กรุณาเข้าสู่ระบบใหม่'};
+        return {'success': false, 'message': 'Session หมดอายุ, กรุณาเข้าสู่ระบบใหม่', 'logout': true};
       } else {
         final errorData = json.decode(response.body);
         return {'success': false, 'message': errorData['message'] ?? 'เกิดข้อผิดพลาดในการดึงข้อมูลโปรไฟล์'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'เกิดข้อผิดพลาดในการเชื่อมต่อ: $e'};
+    }
+  } 
+  // ฟังก์ชันสำหรับอัปเดตข้อมูลโปรไฟล์ผู้ใช้
+  Future<Map<String, dynamic>> updateUserProfile(
+      String name, String email, String? phone, String? address) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('jwtToken');
+
+    if (token == null) {
+      return {'success': false, 'message': 'ไม่พบ Token, กรุณาเข้าสู่ระบบใหม่', 'logout': true};
+    }
+
+    try {
+      final response = await http.put( // <<< ใช้ http.put หรือ http.post ตามที่คุณเลือกใน Backend
+        Uri.parse('$_baseUrl/profile'), // PUT/POST request ไปยัง /api/auth/profile
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'name': name,
+          'email': email,
+          'phone': phone,   // ส่งเบอร์โทร
+          'address': address, // ส่งที่อยู่
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        // อัปเดตข้อมูลใน SharedPreferences ทันทีหลังจากอัปเดตสำเร็จ
+        await prefs.setString('userName', name);
+        await prefs.setString('userEmail', email);
+        await prefs.setString('userPhone', phone ?? ''); // บันทึกเบอร์โทร
+        await prefs.setString('userAddress', address ?? ''); // บันทึกที่อยู่
+
+        return {'success': true, 'message': responseData['message'] ?? 'อัปเดตข้อมูลสำเร็จ'};
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        await logout();
+        return {'success': false, 'message': 'Session หมดอายุ, กรุณาเข้าสู่ระบบใหม่', 'logout': true};
+      } else {
+        final errorData = json.decode(response.body);
+        return {'success': false, 'message': errorData['message'] ?? 'อัปเดตข้อมูลไม่สำเร็จ'};
       }
     } catch (e) {
       return {'success': false, 'message': 'เกิดข้อผิดพลาดในการเชื่อมต่อ: $e'};
