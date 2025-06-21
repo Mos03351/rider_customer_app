@@ -18,8 +18,7 @@ dependencies:
   geolocator: ^12.0.0 
   intl: ^0.19.0 
   shared_preferences: ^2.2.0
-  geocoding: ^2.2.1
- 
+  geocoding: ^2.2.1 
 
 dev_dependencies:
   flutter_test:
@@ -31,3 +30,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+  fonts:
+  - family: Noto Sans Thai # ชื่อ Font Family ที่คุณจะใช้อ้างอิงในโค้ด
+    fonts:
+      - asset: assets/fonts/NotoSansThai-Regular.ttf # Path ไปยังไฟล์ Font
+      - asset: assets/fonts/NotoSansThai-Bold.ttf     # ถ้ามีน้ำหนัก Bold
+        weight: 700 # กำหนด weight สำหรับ Font นั้นๆ (Optional แต่แนะนำ)
+      - asset: assets/fonts/NotoSansThai-Medium.ttf
+        weight: 500

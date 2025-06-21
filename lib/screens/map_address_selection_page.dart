@@ -63,24 +63,20 @@ class _MapAddressSelectionPageState extends State<MapAddressSelectionPage> {
                 },
               ),
               // 'layers' ยังคงมีใน FlutterMap ของ flutter_map v6.x.x
-              layers: [
-                TileLayerOptions(
-                  urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  subdomains: ['a', 'b', 'c'],
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: const ['a', 'b', 'c'],
                 ),
                 if (_selectedLocation != null) // แสดง Marker ถ้ามีการเลือกตำแหน่งแล้ว
-                  MarkerLayerOptions(
+                  MarkerLayer(
                     markers: [
                       Marker(
                         width: 50.0,
                         height: 50.0,
                         point: _selectedLocation!,
                         // 'builder' ยังคงมีใน Marker ของ flutter_map v6.x.x
-                        builder: (ctx) => const Icon(
-                          Icons.location_on,
-                          color: Colors.red,
-                          size: 50.0,
-                        ),
+                        child: const Icon(Icons.location_on),
                       ),
                     ],
                   ),

@@ -1,8 +1,15 @@
 // lib/widgets/app_drawer.dart
 import 'package:flutter/material.dart';
-import 'package:rider_customer_app/screens/login_page.dart';
-import 'package:rider_customer_app/services/auth_service.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import นี้ถูกต้องแล้ว
+import 'package:rider_customer_app/config/app_theme.dart';
+import 'package:rider_customer_app/screens/scheduled_screen.dart';
+import 'package:rider_customer_app/screens/home_screen.dart';
+import 'package:rider_customer_app/screens/trip_history_screen.dart'; // ตรวจสอบให้แน่ใจว่า import ถูกต้อง
+
+// หากคุณมี login_page.dart และ auth_service.dart ให้ uncomment บรรทัดเหล่านี้
+// import 'package:rider_customer_app/screens/login_page.dart';
+// import 'package:rider_customer_app/services/auth_service.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({Key? key}) : super(key: key);
@@ -12,33 +19,43 @@ class AppDrawer extends StatefulWidget {
 }
 
 class _AppDrawerState extends State<AppDrawer> {
-  String _userName = 'ผู้ใช้งาน'; // สถานะสำหรับชื่อผู้ใช้
-  String _userEmail = 'user@example.com'; // สถานะสำหรับอีเมลผู้ใช้
+  String _userName = 'ผู้ใช้งาน';
+  String _userEmail = 'user@example.com';
 
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // โหลดข้อมูลผู้ใช้เมื่อ Widget ถูกสร้าง
+    _loadUserData();
   }
 
-  // ฟังก์ชันสำหรับโหลดข้อมูลผู้ใช้จาก SharedPreferences
   Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _userName = prefs.getString('userName') ?? 'ผู้ใช้งาน';
-      _userEmail = prefs.getString('userEmail') ?? 'user@example.com';
-    });
+    // TODO: ดึงข้อมูลผู้ใช้จริงจาก SharedPreferences หรือ API
+    // final prefs = await SharedPreferences.getInstance();
+    // setState(() {
+    //   _userName = prefs.getString('userName') ?? 'ผู้ใช้งาน';
+    //   _userEmail = prefs.getString('userEmail') ?? 'user@example.com';
+    // });
   }
 
-  // ฟังก์ชันสำหรับออกจากระบบ
-  Future<void> _logout() async { // ไม่ต้องรับ BuildContext ตรงๆ แล้ว เพราะเป็น StatefulWidget
-    final AuthService authService = AuthService();
-    await authService.logout();
+  Future<void> _logout() async {
+    // TODO: ใส่ logic ออกจากระบบจริง (เช่นเรียก AuthService)
+    // final AuthService authService = AuthService();
+    // await authService.logout();
 
-    // ตรวจสอบว่า Widget ยังคงอยู่ใน Widget Tree ก่อนใช้งาน Navigator
     if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginPage()),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('ออกจากระบบแล้ว'),
+          backgroundColor: AppTheme.successColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      // สำหรับการทดสอบ ให้กลับหน้าหลัก
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
         (Route<dynamic> route) => false,
       );
     }
@@ -47,72 +64,81 @@ class _AppDrawerState extends State<AppDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      backgroundColor: AppTheme.backgroundColor,
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          // ใช้ UserAccountsDrawerHeader เพื่อแสดงข้อมูลผู้ใช้
           UserAccountsDrawerHeader(
             accountName: Text(
-              _userName, // แสดงชื่อผู้ใช้จาก State
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              _userName,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppTheme.invertedTextColor),
             ),
             accountEmail: Text(
-              _userEmail, // แสดงอีเมลผู้ใช้จาก State
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              _userEmail,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.invertedTextColor.withOpacity(0.8)),
             ),
-            currentAccountPicture: const CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.person, size: 40, color: Colors.blue),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: AppTheme.highlightColor,
+              child: Icon(Icons.person, size: 40, color: AppTheme.primaryColor),
             ),
             decoration: const BoxDecoration(
-              color: Colors.blue,
+              color: AppTheme.primaryColor,
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('โปรไฟล์'),
+            leading: Icon(Icons.home, color: AppTheme.textColor),
+            title: Text('หน้าหลัก', style: Theme.of(context).textTheme.bodyLarge),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/profile');
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (Route<dynamic> route) => false,
+              );
             },
           ),
           ListTile(
-            leading: const Icon(Icons.history),
-            title: const Text('ประวัติการเดินทาง'),
+            leading: Icon(Icons.calendar_today, color: AppTheme.textColor),
+            title: Text('การจองล่วงหน้า', style: Theme.of(context).textTheme.bodyLarge),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/history');
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ScheduledScreen()));
             },
           ),
           ListTile(
-            leading: const Icon(Icons.calendar_today),
-            title: const Text('การจองล่วงหน้า'),
+            leading: Icon(Icons.history, color: AppTheme.textColor),
+            title: Text('ประวัติการเดินทาง', style: Theme.of(context).textTheme.bodyLarge),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/scheduled');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TripHistoryScreen()), // **โค้ดบรรทัดนี้คือจุดที่เคยมีปัญหา**
+              );
             },
           ),
           ListTile(
-            leading: const Icon(Icons.help),
-            title: const Text('ช่วยเหลือ'),
+            leading: Icon(Icons.payments, color: AppTheme.textColor),
+            title: Text('วิธีการชำระเงิน', style: Theme.of(context).textTheme.bodyLarge),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/help');
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('ตั้งค่า'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/settings');
+              // TODO: Navigator.pushNamed(context, '/payment_methods');
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('ไปยังหน้าวิธีการชำระเงิน')));
             },
           ),
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('ออกจากระบบ', style: TextStyle(color: Colors.red)),
-            onTap: _logout, // เรียกใช้ _logout โดยตรง
+            leading: Icon(Icons.settings, color: AppTheme.textColor),
+            title: Text('ตั้งค่า', style: Theme.of(context).textTheme.bodyLarge),
+            onTap: () {
+              Navigator.pop(context);
+              // TODO: Navigator.pushNamed(context, '/settings');
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('ไปยังหน้าตั้งค่า')));
+            },
+          ),
+          Divider(color: AppTheme.dividerColor),
+          ListTile(
+            leading: const Icon(Icons.logout, color: AppTheme.errorColor),
+            title: Text('ออกจากระบบ', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppTheme.errorColor)),
+            onTap: _logout,
           ),
         ],
       ),

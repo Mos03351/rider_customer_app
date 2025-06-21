@@ -10,6 +10,12 @@ import 'package:rider_customer_app/screens/history_screen.dart';
 import 'package:rider_customer_app/screens/scheduled_screen.dart';
 import 'package:rider_customer_app/screens/help_screen.dart';
 import 'package:rider_customer_app/screens/settings_screen.dart';
+import 'package:rider_customer_app/config/app_theme.dart';
+import 'package:rider_customer_app/screens/search_destination_screen.dart'; // <<< เพิ่มการ import
+import 'package:rider_customer_app/screens/confirm_booking_screen.dart'; // <<< เพิ่มการ import
+import 'package:rider_customer_app/screens/rider_matching_screen.dart'; // <<< เพิ่ม import
+import 'package:rider_customer_app/screens/scheduled_booking_confirm_screen.dart'; // <<< เพิ่ม import
+
 
 void main() {
   runApp(const MyApp());
@@ -21,17 +27,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ไปไหนดี?',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-        ),
-      ),
-      home: const AuthCheckScreen(),
+      title: 'ไปไหนดี?', 
+      theme: AppTheme.lightTheme, // <<< ใช้ธีมที่คุณสร้างขึ้น
+      home: const AuthCheckScreen(), 
       debugShowCheckedModeBanner: false,
       routes: {
         '/home': (context) => const HomeScreen(),
@@ -42,6 +40,7 @@ class MyApp extends StatelessWidget {
         '/scheduled': (context) => const ScheduledScreen(),
         '/help': (context) => const HelpScreen(),
         '/settings': (context) => const SettingsScreen(),
+        '/search_destination': (context) => const SearchDestinationScreen(),
       },
     );
   }

@@ -1,4 +1,7 @@
+// lib/screens/help_screen.dart
 import 'package:flutter/material.dart';
+import 'package:rider_customer_app/config/app_theme.dart';
+// import 'package:url_launcher/url_launcher.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({Key? key}) : super(key: key);
@@ -7,94 +10,101 @@ class HelpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ช่วยเหลือ'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        title: Text(
+          'ช่วยเหลือและติดต่อเรา',
+          style: Theme.of(context).appBarTheme.titleTextStyle,
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.iconTheme?.color),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'คำถามที่พบบ่อย (FAQ)',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blue),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
-            _buildExpansionTile(
-              title: 'ฉันจะเรียกรถได้อย่างไร?',
-              content: 'คุณสามารถเรียกรถได้โดยการป้อนจุดรับและจุดหมายปลายทาง จากนั้นเลือกประเภทรถที่ต้องการและกดยืนยันการเรียกรถ',
+            // แก้ไข: ใช้ Divider() โดยตรงแล้วปรับ height/thickness/color
+            const Divider(height: 16, thickness: 1, color: AppTheme.dividerColor),
+            Card(
+              child: ExpansionTile(
+                title: Text('วิธีเรียกไรเดอร์?', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'คุณสามารถเรียกไรเดอร์ได้โดยกรอกจุดหมายปลายทางในหน้าหลัก แล้วกดปุ่ม "เรียกไรเดอร์" ครับ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            _buildExpansionTile(
-              title: 'ฉันสามารถจองรถล่วงหน้าได้หรือไม่?',
-              content: 'ได้ครับ! คุณสามารถสลับโหมดเป็น "จองล่วงหน้า" และเลือกวันที่และเวลาที่คุณต้องการให้รถไปรับได้',
+            const SizedBox(height: 8),
+            Card(
+              child: ExpansionTile(
+                title: Text('ยกเลิกการเดินทางทำอย่างไร?', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'ขณะอยู่ในระหว่างการเดินทาง คุณสามารถกดปุ่ม "ยกเลิก" ที่มุมขวาบนของหน้าจอได้เลยครับ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            _buildExpansionTile(
-              title: 'มีค่าใช้จ่ายเท่าไหร่?',
-              content: 'ค่าใช้จ่ายจะแสดงให้เห็นเมื่อคุณเลือกประเภทรถและป้อนจุดหมายปลายทางแล้ว โปรดตรวจสอบราคาก่อนยืนยันการเดินทาง',
-            ),
-            _buildExpansionTile(
-              title: 'ฉันจะยกเลิกการเดินทางได้อย่างไร?',
-              content: 'คุณสามารถยกเลิกการเดินทางที่กำลังจะมาถึงได้ที่หน้า "การจองล่วงหน้า" หรือ "ประวัติการเดินทาง" (หากยังอยู่ในสถานะที่ยกเลิกได้)',
-            ),
-            _buildExpansionTile(
-              title: 'ทำไมฉันถึงไม่ได้รับอนุญาตให้เข้าถึงตำแหน่ง?',
-              content: 'โปรดตรวจสอบการตั้งค่าความเป็นส่วนตัวในโทรศัพท์ของคุณ และอนุญาตให้แอปเข้าถึงตำแหน่งเมื่อใช้งานแอป',
-            ),
-            const SizedBox(height: 30),
-            const Text(
+            const SizedBox(height: 32),
+            Text(
               'ติดต่อเรา',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blue),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
-            ListTile(
-              leading: const Icon(Icons.email, color: Colors.blue),
-              title: const Text('ส่งอีเมลถึงเรา'),
-              subtitle: const Text('support@yourapp.com'),
-              onTap: () {
-                // TODO: เพิ่ม Logic สำหรับเปิดแอปอีเมล
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('กำลังเปิดแอปอีเมล...')),
-                );
-              },
+            // แก้ไข: ใช้ Divider() โดยตรงแล้วปรับ height/thickness/color
+            const Divider(height: 16, thickness: 1, color: AppTheme.dividerColor),
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.call, color: AppTheme.primaryColor),
+                title: Text('โทรศัพท์', style: Theme.of(context).textTheme.titleLarge),
+                subtitle: Text('081-234-5678', style: Theme.of(context).textTheme.bodyMedium),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16, color: AppTheme.lightTextColor),
+                onTap: () {
+                  print('โทร 081-234-5678');
+                },
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.phone, color: Colors.blue),
-              title: const Text('โทรหาเรา'),
-              subtitle: const Text('02-123-4567'),
-              onTap: () {
-                // TODO: เพิ่ม Logic สำหรับโทรออก
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('กำลังโทรออก...')),
-                );
-              },
+            const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.email, color: AppTheme.primaryColor),
+                title: Text('อีเมล', style: Theme.of(context).textTheme.titleLarge),
+                subtitle: Text('support@your_app.com', style: Theme.of(context).textTheme.bodyMedium),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16, color: AppTheme.lightTextColor),
+                onTap: () {
+                  print('ส่งอีเมล support@your_app.com');
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.chat, color: AppTheme.primaryColor),
+                title: Text('แชทกับเจ้าหน้าที่', style: Theme.of(context).textTheme.titleLarge),
+                subtitle: Text('บริการ 24 ชั่วโมง', style: Theme.of(context).textTheme.bodyMedium),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16, color: AppTheme.lightTextColor),
+                onTap: () {
+                  print('เปิดแชทกับเจ้าหน้าที่');
+                },
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // Helper method เพื่อสร้าง ExpansionTile ได้ง่ายขึ้น
-  Widget _buildExpansionTile({required String title, required String content}) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: ExpansionTile(
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              content,
-              style: const TextStyle(fontSize: 15, color: Colors.black87),
-            ),
-          ),
-        ],
       ),
     );
   }
